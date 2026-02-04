@@ -29,29 +29,29 @@ Plan de mejoras organizado por fases. Cada fase dura ~1 semana.
 
 ---
 
-## Fase 2: Automatización (Semana 2)
+## Fase 2: Automatización (Semana 2) ✅
 > Objetivo: Alertas inteligentes y reportes
 
-### 2.1 Alertas mejoradas
-- [ ] Alerta cuando carrete < 20% (ya existe)
-- [ ] Alerta cuando carrete lleva > 6 meses abierto
-- [ ] Resumen semanal de inventario
+### 2.1 Alertas mejoradas ✅
+- [x] Alerta cuando carrete < 20%
+- [x] Alerta cuando carrete lleva > 6 meses abierto
+- [x] Resumen semanal de inventario (lunes 9:00)
 
-### 2.2 Informes automáticos
-- [ ] Script de informe mensual:
+### 2.2 Informes automáticos ✅
+- [x] Script de informe mensual:
   - Consumo total (kg)
   - Gasto total (€)
   - Top 3 materiales usados
   - Carretes agotados
-- [ ] Envío automático a Telegram (día 1 de cada mes)
+- [x] Envío automático a Telegram (día 1 de cada mes, 10:00)
 
 ### 2.3 API y webhooks
 - [ ] Endpoint para registrar uso desde scripts externos
 - [ ] Webhook al crear/agotar carrete
 
 **Entregables:**
-- Alertas funcionando
-- Informe mensual automatizado
+- [x] Alertas funcionando
+- [x] Informe mensual automatizado
 
 ---
 

@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Nothing yet
+- 🚨 **Stock alerts script** - Daily alerts for low stock (<20%) and old spools (>6 months)
+- 📊 **Monthly report script** - Comprehensive inventory report on 1st of each month
+- 📅 **Weekly summary script** - Light weekly inventory overview every Monday
+- ⏰ **Automated cron jobs** - All reports run automatically via OpenClaw
 
 ---
 
