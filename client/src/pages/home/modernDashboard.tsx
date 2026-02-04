@@ -229,13 +229,15 @@ export const ModernDashboard = () => {
         </Empty>
       )}
 
-      {/* Quick add button */}
-      <div 
-        className="fab-button"
-        onClick={() => navigate("/spool/create")}
-      >
-        <PlusOutlined style={{ fontSize: 24, color: "white" }} />
-      </div>
+      {/* Quick add button - only show when there are spools */}
+      {spools.length > 0 && (
+        <div 
+          className="fab-button"
+          onClick={() => navigate("/spool/create")}
+        >
+          <PlusOutlined style={{ fontSize: 24, color: "white" }} />
+        </div>
+      )}
     </div>
   );
 };
