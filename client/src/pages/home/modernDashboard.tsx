@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import { useList } from "@refinedev/core";
-import { Card, Progress, Row, Col, Typography, Tag, Empty, Spin, Input, Space, Alert } from "antd";
+import { useList, useUpdate } from "@refinedev/core";
+import { Card, Progress, Row, Col, Typography, Tag, Empty, Spin, Input, Space, Alert, Button, message } from "antd";
 import { 
   DatabaseOutlined, 
   ExperimentOutlined,
@@ -33,6 +33,7 @@ interface Spool {
   remaining_weight: number;
   initial_weight: number;
   location?: string;
+  comment?: string;
   extra?: {
     source?: string;
     needs_verification?: string;
@@ -47,7 +48,6 @@ const SpoolCard = ({ spool, onClick }: { spool: Spool; onClick: () => void }) =>
   const colorHex = spool.filament?.color_hex || "808080";
   const price = spool.filament?.price;
   const cost = price ? ((remaining / 1000) * price).toFixed(2) : null;
-  const needsVerification = spool.extra?.needs_verification === "true";
   
   const getStatusColor = (pct: number) => {
     if (pct > 50) return "#52c41a";
@@ -57,7 +57,7 @@ const SpoolCard = ({ spool, onClick }: { spool: Spool; onClick: () => void }) =>
 
   return (
     <Card 
-      className={`spool-card ${needsVerification ? 'needs-verification' : ''}`}
+      className="spool-card"
       onClick={onClick}
       style={{ 
         borderLeft: `4px solid #${colorHex}`,
@@ -70,16 +70,9 @@ const SpoolCard = ({ spool, onClick }: { spool: Spool; onClick: () => void }) =>
           style={{ backgroundColor: `#${colorHex}` }}
         />
         <div className="spool-info">
-          <Space>
-            <Text strong className="spool-name">
-              {spool.filament?.name || "Sin nombre"}
-            </Text>
-            {needsVerification && (
-              <Tag color="orange" style={{ fontSize: 10, padding: '0 4px' }}>
-                <ScanOutlined /> Escanear
-              </Tag>
-            )}
-          </Space>
+          <Text strong className="spool-name">
+            {spool.filament?.name || "Sin nombre"}
+          </Text>
           <Text type="secondary" className="spool-material">
             {spool.filament?.material} • {spool.filament?.vendor?.name}
           </Text>
@@ -101,6 +94,73 @@ const SpoolCard = ({ spool, onClick }: { spool: Spool; onClick: () => void }) =>
               ~{cost}€ restante
             </Text>
           )}
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+// Card for spools added from invoice that need to be scanned
+const UnverifiedSpoolCard = ({ 
+  spool, 
+  onConfirm 
+}: { 
+  spool: Spool; 
+  onConfirm: () => void;
+}) => {
+  const colorHex = spool.filament?.color_hex || "808080";
+  
+  return (
+    <Card 
+      className="unverified-spool-card"
+      style={{ marginBottom: 16 }}
+    >
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <div 
+          style={{ 
+            width: 48, 
+            height: 48, 
+            borderRadius: 12,
+            backgroundColor: `#${colorHex}`,
+            border: '2px solid rgba(0,0,0,0.15)',
+            flexShrink: 0
+          }} 
+        />
+        <div style={{ flex: 1 }}>
+          <Text strong style={{ fontSize: 16 }}>
+            {spool.filament?.name}
+          </Text>
+          <br />
+          <Text type="secondary">
+            {spool.filament?.material} • {spool.filament?.vendor?.name}
+          </Text>
+          
+          <div style={{ 
+            background: 'rgba(250, 173, 20, 0.1)', 
+            borderRadius: 8, 
+            padding: '8px 12px',
+            marginTop: 8
+          }}>
+            <Text style={{ fontSize: 13 }}>
+              📦 <strong>Añadido desde factura</strong>
+            </Text>
+            <br />
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Escanea este carrete con BambuMan para confirmar que lo tienes físicamente.
+            </Text>
+          </div>
+          
+          <Button 
+            type="primary"
+            icon={<ScanOutlined />}
+            onClick={(e) => {
+              e.stopPropagation();
+              onConfirm();
+            }}
+            style={{ marginTop: 12, width: '100%' }}
+          >
+            ✓ Ya lo escaneé
+          </Button>
         </div>
       </div>
     </Card>
@@ -171,6 +231,8 @@ export const ModernDashboard = () => {
     pagination: { mode: "off" },
   });
 
+  const { mutate: updateSpool } = useUpdate();
+
   const { result: vendorsResult } = useList({
     resource: "vendor",
     pagination: { mode: "off" },
@@ -180,6 +242,28 @@ export const ModernDashboard = () => {
   const spools: Spool[] = spoolsResult?.data || [];
   const filaments: Filament[] = filamentsResult?.data || [];
   const vendors = vendorsResult?.data || [];
+
+  // Handle confirming a spool has been scanned
+  const handleConfirmSpool = (spoolId: number) => {
+    updateSpool(
+      {
+        resource: "spool",
+        id: spoolId,
+        values: { 
+          comment: "",  // Clear the comment
+        },
+      },
+      {
+        onSuccess: () => {
+          message.success("✅ Carrete verificado");
+          spoolsQuery.refetch();
+        },
+        onError: () => {
+          message.error("Error al actualizar");
+        },
+      }
+    );
+  };
 
   // Get unique materials and locations for filters
   const materials = useMemo(() => {
@@ -232,7 +316,7 @@ export const ModernDashboard = () => {
 
   // Spools that need verification (added from invoice, not scanned)
   const unverifiedSpools = spools.filter((s: Spool) => 
-    s.extra?.needs_verification === "true"
+    s.extra?.needs_verification === "true" || s.comment?.includes("[PENDIENTE ESCANEAR]")
   );
 
   // Group filtered spools by material
@@ -353,15 +437,20 @@ export const ModernDashboard = () => {
         </Col>
       </Row>
 
-      {/* Unverified spools alert */}
+      {/* Unverified spools - instructive cards */}
       {unverifiedSpools.length > 0 && (
-        <Alert
-          message={`📦 ${unverifiedSpools.length} bobina(s) añadida(s) desde factura - pendiente escanear`}
-          type="info"
-          showIcon
-          icon={<ScanOutlined />}
-          style={{ marginBottom: 12, borderRadius: 8 }}
-        />
+        <div style={{ marginBottom: 16 }}>
+          <Text strong style={{ display: 'block', marginBottom: 12, fontSize: 14 }}>
+            📦 Pendientes de verificar ({unverifiedSpools.length})
+          </Text>
+          {unverifiedSpools.map((spool: Spool) => (
+            <UnverifiedSpoolCard
+              key={spool.id}
+              spool={spool}
+              onConfirm={() => handleConfirmSpool(spool.id)}
+            />
+          ))}
+        </div>
       )}
 
       {/* Low stock alert */}
