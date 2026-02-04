@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useList } from "@refinedev/core";
-import { Card, Progress, Row, Col, Typography, Tag, Empty, Spin, Input, Space } from "antd";
+import { Card, Progress, Row, Col, Typography, Tag, Empty, Spin, Input, Space, Alert } from "antd";
 import { 
   DatabaseOutlined, 
   ExperimentOutlined,
@@ -8,7 +8,8 @@ import {
   PlusOutlined,
   SearchOutlined,
   EnvironmentOutlined,
-  EuroOutlined
+  EuroOutlined,
+  ScanOutlined
 } from "@ant-design/icons";
 import { useNavigate } from "react-router";
 import "./modernDashboard.css";
@@ -32,6 +33,11 @@ interface Spool {
   remaining_weight: number;
   initial_weight: number;
   location?: string;
+  extra?: {
+    source?: string;
+    needs_verification?: string;
+    [key: string]: string | undefined;
+  };
 }
 
 const SpoolCard = ({ spool, onClick }: { spool: Spool; onClick: () => void }) => {
@@ -41,6 +47,7 @@ const SpoolCard = ({ spool, onClick }: { spool: Spool; onClick: () => void }) =>
   const colorHex = spool.filament?.color_hex || "808080";
   const price = spool.filament?.price;
   const cost = price ? ((remaining / 1000) * price).toFixed(2) : null;
+  const needsVerification = spool.extra?.needs_verification === "true";
   
   const getStatusColor = (pct: number) => {
     if (pct > 50) return "#52c41a";
@@ -50,7 +57,7 @@ const SpoolCard = ({ spool, onClick }: { spool: Spool; onClick: () => void }) =>
 
   return (
     <Card 
-      className="spool-card"
+      className={`spool-card ${needsVerification ? 'needs-verification' : ''}`}
       onClick={onClick}
       style={{ 
         borderLeft: `4px solid #${colorHex}`,
@@ -63,9 +70,16 @@ const SpoolCard = ({ spool, onClick }: { spool: Spool; onClick: () => void }) =>
           style={{ backgroundColor: `#${colorHex}` }}
         />
         <div className="spool-info">
-          <Text strong className="spool-name">
-            {spool.filament?.name || "Sin nombre"}
-          </Text>
+          <Space>
+            <Text strong className="spool-name">
+              {spool.filament?.name || "Sin nombre"}
+            </Text>
+            {needsVerification && (
+              <Tag color="orange" style={{ fontSize: 10, padding: '0 4px' }}>
+                <ScanOutlined /> Escanear
+              </Tag>
+            )}
+          </Space>
           <Text type="secondary" className="spool-material">
             {spool.filament?.material} • {spool.filament?.vendor?.name}
           </Text>
@@ -216,6 +230,11 @@ export const ModernDashboard = () => {
     return pct < 20;
   });
 
+  // Spools that need verification (added from invoice, not scanned)
+  const unverifiedSpools = spools.filter((s: Spool) => 
+    s.extra?.needs_verification === "true"
+  );
+
   // Group filtered spools by material
   const spoolsByMaterial = filteredSpools.reduce((acc: Record<string, Spool[]>, spool: Spool) => {
     const material = spool.filament?.material || "Otro";
@@ -333,6 +352,17 @@ export const ModernDashboard = () => {
           />
         </Col>
       </Row>
+
+      {/* Unverified spools alert */}
+      {unverifiedSpools.length > 0 && (
+        <Alert
+          message={`📦 ${unverifiedSpools.length} bobina(s) añadida(s) desde factura - pendiente escanear`}
+          type="info"
+          showIcon
+          icon={<ScanOutlined />}
+          style={{ marginBottom: 12, borderRadius: 8 }}
+        />
+      )}
 
       {/* Low stock alert */}
       {lowStockSpools.length > 0 && (
