@@ -12,20 +12,20 @@ Plan de mejoras organizado por fases. Cada fase dura ~1 semana.
 - [ ] Verificar que cada carrete tiene: nombre, material, color, peso inicial
 - [ ] Añadir ubicación a cada carrete (estante/caja)
 
-### 1.2 Campos de coste
-- [ ] Añadir campo `price` a filamentos en FilaFlow
-- [ ] Crear script para calcular coste por carrete
-- [ ] Mostrar coste en dashboard
+### 1.2 Campos de coste ✅
+- [x] Añadir campo `price` a filamentos en FilaFlow (ya existía en Spoolman)
+- [x] Crear script para calcular coste por carrete
+- [x] Mostrar coste en dashboard
 
-### 1.3 Mejoras UI
-- [ ] Añadir ubicación visible en las cards del dashboard
-- [ ] Filtro por ubicación/material
-- [ ] Búsqueda de carretes
+### 1.3 Mejoras UI ✅
+- [x] Añadir ubicación visible en las cards del dashboard
+- [x] Filtro por ubicación/material
+- [x] Búsqueda de carretes
 
 **Entregables:**
-- Inventario 100% escaneado
-- Costes registrados
-- Dashboard con filtros
+- [ ] Inventario 100% escaneado
+- [x] Costes registrados
+- [x] Dashboard con filtros
 
 ---
 
@@ -134,10 +134,10 @@ Plan de mejoras organizado por fases. Cada fase dura ~1 semana.
 | Versión | Fecha objetivo | Contenido |
 |---------|---------------|-----------|
 | v0.1.0  | ✅ 2026-02-04 | Dashboard móvil, fork inicial |
-| v0.2.0  | 2026-02-11    | Costes, filtros, ubicaciones |
-| v0.3.0  | 2026-02-18    | Alertas, informes mensuales |
-| v0.4.0  | 2026-02-25    | BambuMan APK custom |
-| v0.5.0  | 2026-03-04    | Home Assistant integration |
+| v0.2.0  | ✅ 2026-02-04 | Costes, filtros, ubicaciones, búsqueda |
+| v0.3.0  | 2026-02-11    | Alertas, informes mensuales |
+| v0.4.0  | 2026-02-18    | BambuMan APK custom |
+| v0.5.0  | 2026-02-25    | Home Assistant integration |
 | v1.0.0  | 2026-03-15    | Release estable completo |
 
 ---

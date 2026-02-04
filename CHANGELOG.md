@@ -8,11 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Nothing yet
+
+---
+
+## [0.2.0] - 2026-02-04
+
+### Added
 - 🔍 **Search bar** - Find spools by name, material, vendor, or location
 - 🏷️ **Filter chips** - Quick filter by material type or location
 - 📍 **Location display** - Show spool location on cards
 - 💰 **Cost display** - Show estimated value per spool and total inventory value
 - 💶 **Value stat card** - Total inventory value in euros (replaces Vendors card)
+- 🧹 **Clear filters button** - Reset all filters with one tap
+- 📱 **Click to edit** - Tap any spool card to edit it directly
+
+### Changed
+- Dashboard header renamed from "Mi Inventario" to "FilaFlow"
+- Stats row now shows total inventory value instead of vendor count
 
 ---
 
