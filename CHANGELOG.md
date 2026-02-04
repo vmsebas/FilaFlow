@@ -7,13 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+- 📦 **Stock general** - Inventario de máquinas, accesorios y consumibles (no solo filamentos)
+- 🔗 **Links de compra** - Enlace directo a tienda Bambu Lab cuando stock bajo
+- 🏷️ **Categorización automática** - Detectar tipo de producto por SKU
+
+---
+
+## [0.3.0] - 2026-02-04
+
 ### Added
-- 📄 **Invoice Import page** - Parse Bambu Lab invoices to auto-fill filament prices
-- 🔌 **Invoice API** - `/api/v1/invoice/parse` endpoint for programmatic invoice parsing
-- 🚨 **Stock alerts script** - Daily alerts for low stock (<20%) and old spools (>6 months)
-- 📊 **Monthly report script** - Comprehensive inventory report on 1st of each month
-- 📅 **Weekly summary script** - Light weekly inventory overview every Monday
-- ⏰ **Automated cron jobs** - All reports run automatically via OpenClaw
+- 📄 **Invoice PDF Upload** - Subir facturas PDF directamente (antes solo texto)
+- 🇪🇸 **Soporte español** - Parser detecta colores en español (Rojo caramelo, Azul marino, etc.)
+- 🔄 **Refill support** - Parser detecta filamentos SPLFREE (refills sin bobina)
+- ✅ **Verificación pendiente** - Spools añadidos desde factura quedan marcados como "pendiente escanear"
+- 🎯 **Añadir directo** - Click en "+" añade inmediatamente (sin modal)
+- 📦 **Añadir todos** - Botón para añadir todos los filamentos de una factura
+- ✨ **Estado de éxito** - Después de añadir, muestra confirmación con link al dashboard
+- 🔍 **Debug endpoint** - `/api/v1/invoice/parse-pdf-debug` para diagnóstico
+
+### Changed
+- 📱 **UI compacta** - Lista de filamentos en filas (una línea por item)
+- 🎨 **Colores mejorados** - Mapa de colores expandido (inglés + español)
+- 🏷️ **Títulos en español** - "Pendiente llegada", "En inventario", etc.
+- 🔧 **Dockerfile fix** - Orden correcto de COPY para incluir cliente actualizado
+
+### Fixed
+- 🐛 **Duplicados en dashboard** - Spools pendientes ya no aparecen duplicados
+- 🐛 **Precios incorrectos** - Parser extrae precio final correcto (después de descuentos)
+- 🐛 **SKU con espacios** - Parser normaliza SKUs de PDF con saltos de línea
 
 ---
 
@@ -27,6 +49,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 💶 **Value stat card** - Total inventory value in euros (replaces Vendors card)
 - 🧹 **Clear filters button** - Reset all filters with one tap
 - 📱 **Click to edit** - Tap any spool card to edit it directly
+- 📄 **Invoice Import page** - Parse Bambu Lab invoices (text only)
+- 🔌 **Invoice API** - `/api/v1/invoice/parse` endpoint
+- 🚨 **Stock alerts script** - Daily alerts for low stock
+- 📊 **Monthly report script** - Inventory report on 1st of month
+- 📅 **Weekly summary script** - Weekly overview every Monday
+- ⏰ **Automated cron jobs** - Reports via OpenClaw
 
 ### Changed
 - Dashboard header renamed from "Mi Inventario" to "FilaFlow"
@@ -48,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 📝 **FilaFlow branding** - New README and project identity
 
 ### Fixed
-- FAB button no longer appears in empty state (duplicate with "Add first spool" card)
+- FAB button no longer appears in empty state
 
 ### Changed
 - Forked from [Spoolman v0.23.1](https://github.com/Donkie/Spoolman)
@@ -60,14 +88,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 FilaFlow follows [Semantic Versioning](https://semver.org/):
 
 - **MAJOR** (1.0.0): Breaking changes or major rewrites
-- **MINOR** (0.1.0): New features, backwards compatible
-- **PATCH** (0.1.1): Bug fixes, backwards compatible
+- **MINOR** (0.X.0): New features, backwards compatible
+- **PATCH** (0.X.X): Bug fixes, backwards compatible
 
-### Version History
+| Version | Date       | Highlights |
+|---------|------------|------------|
+| 0.3.0   | 2026-02-04 | Invoice PDF upload, Spanish support, direct add |
+| 0.2.0   | 2026-02-04 | Search, filters, costs, invoice text import |
+| 0.1.0   | 2026-02-04 | Initial fork, mobile dashboard |
 
-| Version | Date       | Spoolman Base | Highlights |
-|---------|------------|---------------|------------|
-| 0.1.0   | 2026-02-04 | 0.23.1        | Initial fork, mobile dashboard |
-
-[Unreleased]: https://github.com/vmsebas/FilaFlow/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/vmsebas/FilaFlow/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/vmsebas/FilaFlow/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/vmsebas/FilaFlow/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/vmsebas/FilaFlow/releases/tag/v0.1.0

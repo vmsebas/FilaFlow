@@ -50,11 +50,11 @@ RUN groupmod -g 1000 users \
     && mkdir -p /home/app/.local/share/spoolman \
     && chown -R app:app /home/app/.local/share/spoolman
 
-# Copy built client
-COPY --chown=app:app ./client/dist /home/app/spoolman/client/dist
-
 # Copy built app
 COPY --chown=app:app --from=python-builder /home/app/spoolman /home/app/spoolman
+
+# Copy built client AFTER python app (so it doesn't get overwritten)
+COPY --chown=app:app ./client/dist /home/app/spoolman/client/dist
 
 COPY entrypoint.sh /home/app/spoolman/entrypoint.sh
 RUN chmod +x /home/app/spoolman/entrypoint.sh

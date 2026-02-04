@@ -277,8 +277,18 @@ export const ModernDashboard = () => {
   }, [spools]);
 
   // Filter spools
+  // Spools that need verification (added from invoice, not scanned)
+  const unverifiedSpools = useMemo(() => 
+    spools.filter((s: Spool) => 
+      s.extra?.needs_verification === "true" || s.comment?.includes("[PENDIENTE ESCANEAR]")
+    ), [spools]);
+
   const filteredSpools = useMemo(() => {
     return spools.filter(spool => {
+      // Exclude unverified spools - they show in their own section
+      if (spool.extra?.needs_verification === "true" || spool.comment?.includes("[PENDIENTE ESCANEAR]")) {
+        return false;
+      }
       // Search filter
       if (searchText) {
         const search = searchText.toLowerCase();
@@ -313,11 +323,6 @@ export const ModernDashboard = () => {
     const pct = ((s.remaining_weight || 0) / (s.initial_weight || 1000)) * 100;
     return pct < 20;
   });
-
-  // Spools that need verification (added from invoice, not scanned)
-  const unverifiedSpools = spools.filter((s: Spool) => 
-    s.extra?.needs_verification === "true" || s.comment?.includes("[PENDIENTE ESCANEAR]")
-  );
 
   // Group filtered spools by material
   const spoolsByMaterial = filteredSpools.reduce((acc: Record<string, Spool[]>, spool: Spool) => {

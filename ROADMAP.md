@@ -1,161 +1,150 @@
 # 🗺️ FilaFlow Roadmap
 
-Plan de mejoras organizado por fases. Cada fase dura ~1 semana.
+Plan de mejoras organizado por fases.
 
 ---
 
-## Fase 1: Fundamentos (Esta semana)
-> Objetivo: Tener el inventario completo y funcional
+## ✅ Completado
 
-### 1.1 Inventario inicial
-- [ ] Escanear todos los carretes existentes con BambuMan
-- [ ] Verificar que cada carrete tiene: nombre, material, color, peso inicial
-- [ ] Añadir ubicación a cada carrete (estante/caja)
+### Fase 1: Dashboard Móvil (v0.1.0)
+- [x] UI moderna con cards
+- [x] Progress bars de uso
+- [x] Agrupación por material
+- [x] FAB para añadir rápido
 
-### 1.2 Campos de coste ✅
-- [x] Añadir campo `price` a filamentos en FilaFlow (ya existía en Spoolman)
-- [x] Crear script para calcular coste por carrete
-- [x] Mostrar coste en dashboard
+### Fase 2: Búsqueda y Costes (v0.2.0)
+- [x] Barra de búsqueda
+- [x] Filtros por material/ubicación
+- [x] Mostrar coste por carrete
+- [x] Valor total de inventario
+- [x] Import de facturas (texto)
+- [x] Alertas de stock bajo
+- [x] Informes automáticos (diario/semanal/mensual)
 
-### 1.3 Mejoras UI ✅
-- [x] Añadir ubicación visible en las cards del dashboard
-- [x] Filtro por ubicación/material
-- [x] Búsqueda de carretes
+### Fase 3: Import Mejorado (v0.3.0)
+- [x] Upload de PDF de facturas
+- [x] Parser para refills (SPLFREE)
+- [x] Colores en español
+- [x] Añadir directo sin modal
+- [x] Verificación pendiente para spools de factura
+- [x] UI compacta en filas
+
+---
+
+## 🚧 En Progreso
+
+### Fase 4: Stock General (v0.4.0)
+> Objetivo: Trackear TODO lo comprado, no solo filamentos
+
+#### 4.1 Parser expandido
+- [ ] Detectar TODOS los productos de factura (no solo filamentos)
+- [ ] Categorización automática por SKU:
+  - `PF###` → Impresoras
+  - `A##-...-SPL` → Filamentos
+  - `FAP###` → Build Plates
+  - `FAH###` → Hotends
+  - `RSP###` → Spools vacíos
+  - `B-###`, `AMS###` → Accesorios
+  - Otros → Genérico
+
+#### 4.2 Base de datos
+- [ ] Nueva tabla `products`:
+  ```
+  id, name, sku, category, price, quantity, location, 
+  purchase_date, invoice_number, notes
+  ```
+- [ ] Categorías: Máquina, Accesorio, Consumible, Repuesto
+
+#### 4.3 UI de Stock
+- [ ] Nueva página `/stock`
+- [ ] Vista por categorías
+- [ ] Búsqueda y filtros
+- [ ] Añadir/editar productos manualmente
+
+#### 4.4 Lógica de duplicados
+- [ ] SKU único (no duplicar al reimportar)
+- [ ] Detectar "ya existe" y ofrecer actualizar precio
 
 **Entregables:**
-- [ ] Inventario 100% escaneado
-- [x] Costes registrados
-- [x] Dashboard con filtros
+- Parser que detecta todo
+- Tabla de productos
+- Página de stock
 
 ---
 
-## Fase 2: Automatización (Semana 2) ✅
-> Objetivo: Alertas inteligentes y reportes
+## 📋 Planificado
 
-### 2.1 Alertas mejoradas ✅
-- [x] Alerta cuando carrete < 20%
-- [x] Alerta cuando carrete lleva > 6 meses abierto
-- [x] Resumen semanal de inventario (lunes 9:00)
+### Fase 5: Links de Compra (v0.5.0)
+- [ ] Guardar URL del producto al importar
+- [ ] Botón "Comprar más" cuando stock bajo
+- [ ] Construcción de URL desde SKU/nombre
 
-### 2.2 Informes automáticos ✅
-- [x] Script de informe mensual:
-  - Consumo total (kg)
-  - Gasto total (€)
-  - Top 3 materiales usados
-  - Carretes agotados
-- [x] Envío automático a Telegram (día 1 de cada mes, 10:00)
-
-### 2.3 API y webhooks
-- [ ] Endpoint para registrar uso desde scripts externos
-- [ ] Webhook al crear/agotar carrete
-
-**Entregables:**
-- [x] Alertas funcionando
-- [x] Informe mensual automatizado
-
----
-
-## Fase 3: BambuMan Custom (Semana 3)
-> Objetivo: APK personalizado compilado y funcionando
-
-### 3.1 Compilar APK
-- [ ] Opción A: Instalar .NET SDK + MAUI localmente
-- [ ] Opción B: Configurar GitHub Actions para build automático
-- [ ] Generar APK firmado
-
-### 3.2 Mejoras BambuMan
-- [ ] first_use_date automático ✅ (ya implementado)
-- [ ] Campo precio en settings
+### Fase 6: BambuMan Custom (v0.6.0)
+- [ ] Compilar APK con modificaciones
+- [ ] first_use_date automático
 - [ ] Selector de ubicación al escanear
-- [ ] Historial de escaneos recientes
+- [ ] Precio en configuración
 
-### 3.3 Testing
-- [ ] Probar con 5+ carretes diferentes
-- [ ] Verificar sync con FilaFlow
-- [ ] Documentar bugs encontrados
+### Fase 7: Integraciones (v0.7.0)
+- [ ] Home Assistant sensors
+- [ ] Bambu Lab MQTT (experimental)
+- [ ] Webhooks para automatización
 
-**Entregables:**
-- APK instalable en móvil
-- Funcionalidades custom funcionando
-
----
-
-## Fase 4: Integraciones (Semana 4)
-> Objetivo: Conectar con el ecosistema
-
-### 4.1 Home Assistant
-- [ ] Sensores de inventario (total kg, carretes, stock bajo)
-- [ ] Automatizaciones (luz roja si stock crítico)
-- [ ] Card personalizada para dashboard HA
-
-### 4.2 Bambu Lab MQTT (experimental)
-- [ ] Conectar a impresora via MQTT
-- [ ] Leer uso de filamento en tiempo real
-- [ ] Actualizar peso automáticamente en FilaFlow
-
-### 4.3 Báscula IoT (opcional)
-- [ ] ESP32 + célula de carga
-- [ ] API REST para reportar peso
-- [ ] Calibración automática
-
-**Entregables:**
-- Dashboard en Home Assistant
-- Tracking automático (si MQTT funciona)
-
----
-
-## Fase 5: Pulido (Semana 5+)
-> Objetivo: Experiencia completa
-
-### 5.1 UX
-- [ ] Dark mode en dashboard
-- [ ] Gráficas de consumo histórico
-- [ ] Vista calendario (cuándo se usó cada carrete)
-
-### 5.2 Extras
-- [ ] Generador de etiquetas QR para carretes sin NFC
-- [ ] Modo bulk scan (varios carretes seguidos)
-- [ ] Export/import de base de datos
-- [ ] Multi-idioma (ES/EN)
-
-### 5.3 Documentación
-- [ ] Guía completa de usuario
-- [ ] Video tutorial
-- [ ] Publicar en comunidades 3D printing
-
-**Entregables:**
-- Producto pulido
-- Documentación completa
+### Fase 8: Pulido (v1.0.0)
+- [ ] Gráficas de consumo
+- [ ] Export/import de datos
+- [ ] Multi-idioma completo
+- [ ] Documentación completa
 
 ---
 
 ## Milestones
 
-| Versión | Fecha objetivo | Contenido |
-|---------|---------------|-----------|
-| v0.1.0  | ✅ 2026-02-04 | Dashboard móvil, fork inicial |
-| v0.2.0  | ✅ 2026-02-04 | Costes, filtros, ubicaciones, búsqueda |
-| v0.3.0  | 2026-02-11    | Alertas, informes mensuales |
-| v0.4.0  | 2026-02-18    | BambuMan APK custom |
-| v0.5.0  | 2026-02-25    | Home Assistant integration |
-| v1.0.0  | 2026-03-15    | Release estable completo |
+| Versión | Estado | Contenido |
+|---------|--------|-----------|
+| v0.1.0  | ✅ | Dashboard móvil |
+| v0.2.0  | ✅ | Búsqueda, filtros, costes, alertas |
+| v0.3.0  | ✅ | Invoice PDF, español, añadir directo |
+| v0.4.0  | 🚧 | Stock general (máquinas, accesorios) |
+| v0.5.0  | 📋 | Links de compra |
+| v0.6.0  | 📋 | BambuMan APK custom |
+| v0.7.0  | 📋 | Integraciones |
+| v1.0.0  | 📋 | Release estable |
 
 ---
 
 ## Prioridades Actuales
 
 ```
-🔴 AHORA:     Escanear inventario + campos de coste
-🟡 PRÓXIMO:   Filtros en dashboard + informes
-🟢 DESPUÉS:   BambuMan APK + integraciones
+🔴 AHORA:     Fase 4 - Stock general
+🟡 PRÓXIMO:   Fase 5 - Links de compra
+🟢 DESPUÉS:   Fase 6 - BambuMan APK
 ```
 
 ---
 
-## Notas
+## Decisiones de Diseño
 
-- Cada fase se puede ajustar según disponibilidad
-- Las integraciones MQTT son experimentales (dependen de Bambu Lab)
-- Home Assistant es opcional pero recomendado
+### SKU como identificador único
+- Cada producto tiene un SKU único de Bambu Lab
+- Reimportar factura no duplica productos
+- Si SKU existe → mostrar como "ya en inventario"
+
+### Categorías de productos
+| Categoría | Se gasta | Tracking |
+|-----------|----------|----------|
+| Filamento | Sí (gramos) | Spools, NFC, uso |
+| Máquina | No | Ubicación, garantía |
+| Accesorio | Poco | Ubicación, precio |
+| Consumible | Sí (cantidad) | Stock mínimo |
+| Repuesto | Sí (cantidad) | Stock mínimo |
+
+### Flujo de factura
+1. Subir PDF → Parser detecta todo
+2. Mostrar por categorías
+3. Click "Añadir todo" → Stock actualizado
+4. Sin duplicados (SKU único)
+
+---
 
 Última actualización: 2026-02-04

@@ -14,16 +14,22 @@ import {
   Modal,
   Form,
   InputNumber,
-  Select
+  Select,
+  Upload,
+  Tabs
 } from "antd";
+import type { UploadFile } from "antd";
 import { 
   FileTextOutlined, 
   CheckCircleOutlined,
   WarningOutlined,
   EuroOutlined,
   PlusOutlined,
-  ShoppingCartOutlined
+  ShoppingCartOutlined,
+  UploadOutlined,
+  FilePdfOutlined
 } from "@ant-design/icons";
+import { useNavigate } from "react-router";
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -56,41 +62,64 @@ interface Vendor {
   name: string;
 }
 
-// Color mapping for common Bambu Lab colors
+// Color mapping for common Bambu Lab colors (English + Spanish)
 const COLOR_MAP: Record<string, string> = {
-  'Black': '1a1a1a',
-  'White': 'ffffff',
-  'Red': 'e63946',
-  'Blue': '1890ff',
-  'Green': '2ecc71',
-  'Yellow': 'f1c40f',
-  'Orange': 'ff6b00',
-  'Gray': '7f8c8d',
-  'Grey': '7f8c8d',
-  'Purple': '9b59b6',
-  'Pink': 'ff69b4',
-  'Brown': '8b4513',
-  'Cyan': '00bcd4',
-  'Magenta': 'ff00ff',
-  'Lime': '00ff00',
-  'Navy': '000080',
-  'Teal': '008080',
-  'Olive': '808000',
-  'Maroon': '800000',
-  'Silver': 'c0c0c0',
-  'Gold': 'ffd700',
+  // English
+  'black': '1a1a1a',
+  'white': 'ffffff',
+  'red': 'e63946',
+  'blue': '1890ff',
+  'green': '2ecc71',
+  'yellow': 'f1c40f',
+  'orange': 'ff6b00',
+  'gray': '7f8c8d',
+  'grey': '7f8c8d',
+  'purple': '9b59b6',
+  'pink': 'ff69b4',
+  'brown': '8b4513',
+  'cyan': '00bcd4',
+  'magenta': 'ff00ff',
+  'lime': '00ff00',
+  'navy': '000080',
+  'teal': '008080',
+  'olive': '808000',
+  'maroon': '800000',
+  'silver': 'c0c0c0',
+  'gold': 'ffd700',
+  // Spanish
+  'negro': '1a1a1a',
+  'blanco': 'ffffff',
+  'rojo': 'e63946',
+  'azul': '1890ff',
+  'verde': '2ecc71',
+  'amarillo': 'f1c40f',
+  'naranja': 'ff6b00',
+  'gris': '7f8c8d',
+  'morado': '9b59b6',
+  'rosa': 'ff69b4',
+  'marrón': '8b4513',
+  'marron': '8b4513',
+  'chocolate': '8b4513',
+  'carbón': '2d2d2d',
+  'carbon': '2d2d2d',
+  'caramelo': 'd2691e',
+  'limón': 'fff44f',
+  'limon': 'fff44f',
+  'marino': '000080',
+  'nardo': 'a9a9a9',
+  'oscuro': '4a3728',
 };
 
 export const InvoiceImport = () => {
+  const navigate = useNavigate();
   const [invoiceText, setInvoiceText] = useState("");
   const [parsedFilaments, setParsedFilaments] = useState<ParsedFilament[]>([]);
   const [parsing, setParsing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updated, setUpdated] = useState<string[]>([]);
   const [added, setAdded] = useState<string[]>([]);
-  const [addModalVisible, setAddModalVisible] = useState(false);
-  const [selectedFilament, setSelectedFilament] = useState<ParsedFilament | null>(null);
-  const [form] = Form.useForm();
+  const [pdfFile, setPdfFile] = useState<UploadFile | null>(null);
+  const [uploadMethod, setUploadMethod] = useState<"pdf" | "text">("pdf");
 
   const { result: filamentsResult, query: filamentsQuery } = useList<Filament>({
     resource: "filament",
@@ -147,6 +176,45 @@ export const InvoiceImport = () => {
     }
   };
 
+  const parsePDF = async () => {
+    if (!pdfFile || !pdfFile.originFileObj) {
+      setError("Por favor selecciona un archivo PDF");
+      return;
+    }
+
+    setParsing(true);
+    setError(null);
+    setParsedFilaments([]);
+    setUpdated([]);
+    setAdded([]);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", pdfFile.originFileObj);
+
+      const response = await fetch("/api/v1/invoice/parse-pdf", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setParsedFilaments(data.filaments);
+        message.success(`${data.filaments.length} filamento(s) encontrado(s)`);
+        if (data.filaments.length === 0) {
+          setError("No se encontraron filamentos en el PDF");
+        }
+      } else {
+        setError(data.message || data.detail || "Error al procesar el PDF");
+      }
+    } catch (err) {
+      setError("Error de conexión con la API");
+    } finally {
+      setParsing(false);
+    }
+  };
+
   const findMatchingFilament = (articleNumber: string): Filament | undefined => {
     return filaments.find(f => f.article_number === articleNumber);
   };
@@ -177,134 +245,229 @@ export const InvoiceImport = () => {
     );
   };
 
-  const openAddModal = (parsed: ParsedFilament) => {
-    setSelectedFilament(parsed);
-    
+  // Add filament directly without modal - marks as pending verification
+  const addFilamentDirect = (parsed: ParsedFilament) => {
     // Find Bambu Lab vendor or first vendor
     const bambuVendor = vendors.find(v => v.name.toLowerCase().includes('bambu'));
     const defaultVendor = bambuVendor || vendors[0];
     
-    form.setFieldsValue({
-      name: parsed.color,
-      material: parsed.material.split(' ')[0], // Just "PLA" not "PLA BASIC"
-      color_hex: COLOR_MAP[parsed.color] || '808080',
-      price: parsed.price,
-      weight: parsed.weight,
-      density: 1.24,
-      diameter: 1.75,
-      article_number: parsed.article_number,
-      vendor_id: defaultVendor?.id,
-      create_spool: true,
-      spool_location: '',
-    });
+    const colorHex = getColorHex(parsed.color);
+    const materialBase = parsed.material.split(' ')[0]; // "PLA" from "PLA BASIC"
     
-    setAddModalVisible(true);
+    // Create filament
+    createFilament(
+      {
+        resource: "filament",
+        values: {
+          name: `${parsed.material} ${parsed.color}`,
+          material: materialBase,
+          color_hex: colorHex,
+          price: parsed.price,
+          weight: parsed.weight,
+          density: 1.24,
+          diameter: 1.75,
+          article_number: parsed.article_number,
+          vendor_id: defaultVendor?.id,
+        },
+      },
+      {
+        onSuccess: (data) => {
+          // Create spool marked as pending verification
+          createSpool(
+            {
+              resource: "spool",
+              values: {
+                filament_id: data.data.id,
+                initial_weight: parsed.weight,
+                used_weight: 0,
+                location: '',
+                comment: '[PENDIENTE ESCANEAR]',
+                extra: {
+                  needs_verification: 'true',
+                  source: 'invoice',
+                },
+              },
+            },
+            {
+              onSuccess: () => {
+                message.success(`✓ ${parsed.material} ${parsed.color} añadido`);
+                setAdded(prev => [...prev, parsed.article_number]);
+                refetchFilaments();
+              },
+              onError: () => {
+                message.error("Error al crear bobina");
+              },
+            }
+          );
+        },
+        onError: () => {
+          message.error("Error al crear filamento");
+        },
+      }
+    );
   };
 
-  const handleAddFilament = async () => {
-    try {
-      const values = await form.validateFields();
-      
-      // Create filament
-      createFilament(
-        {
-          resource: "filament",
-          values: {
-            name: values.name,
-            material: values.material,
-            color_hex: values.color_hex,
-            price: values.price,
-            weight: values.weight,
-            density: values.density,
-            diameter: values.diameter,
-            article_number: values.article_number,
-            vendor_id: values.vendor_id,
-          },
-        },
-        {
-          onSuccess: (data) => {
-            message.success(`Filament created: ${values.name}`);
-            
-            // Create spool if requested
-            if (values.create_spool) {
-              createSpool(
-                {
-                  resource: "spool",
-                  values: {
-                    filament_id: data.data.id,
-                    initial_weight: values.weight,
-                    used_weight: 0,
-                    location: values.spool_location || '',
-                  },
-                },
-                {
-                  onSuccess: () => {
-                    message.success(`Spool added to inventory`);
-                  },
-                }
-              );
-            }
-            
-            setAdded([...added, selectedFilament?.article_number || '']);
-            setAddModalVisible(false);
-            refetchFilaments();
-          },
-          onError: () => {
-            message.error("Failed to create filament");
-          },
-        }
-      );
-    } catch (err) {
-      // Form validation error
-    }
+  // Add all unmatched filaments at once
+  const addAllFilaments = () => {
+    unmatchedFilaments.forEach((item, index) => {
+      // Stagger the requests slightly to avoid race conditions
+      setTimeout(() => {
+        addFilamentDirect(item);
+      }, index * 300);
+    });
   };
 
   const getColorHex = (colorName: string): string => {
-    return COLOR_MAP[colorName] || '808080';
+    // Normalize and check exact match first
+    const normalized = colorName.toLowerCase().trim();
+    if (COLOR_MAP[normalized]) {
+      return COLOR_MAP[normalized];
+    }
+    
+    // Check each word in the color name
+    const words = normalized.split(/\s+/);
+    for (const word of words) {
+      if (COLOR_MAP[word]) {
+        return COLOR_MAP[word];
+      }
+    }
+    
+    // Check if any key is contained in the color name
+    for (const [key, hex] of Object.entries(COLOR_MAP)) {
+      if (normalized.includes(key)) {
+        return hex;
+      }
+    }
+    
+    return '808080'; // Default gray
   };
 
   // Separate filaments into matched and unmatched
-  const matchedFilaments = parsedFilaments.filter(f => findMatchingFilament(f.article_number));
-  const unmatchedFilaments = parsedFilaments.filter(f => !findMatchingFilament(f.article_number) && !added.includes(f.article_number));
+  // Exclude just-added filaments from both lists (they'll show in success state)
+  const matchedFilaments = parsedFilaments.filter(f => 
+    findMatchingFilament(f.article_number) && !added.includes(f.article_number)
+  );
+  const unmatchedFilaments = parsedFilaments.filter(f => 
+    !findMatchingFilament(f.article_number) && !added.includes(f.article_number)
+  );
   const newlyAdded = parsedFilaments.filter(f => added.includes(f.article_number));
+  
+  // Check if all filaments from invoice have been added
+  const allAdded = parsedFilaments.length > 0 && unmatchedFilaments.length === 0 && matchedFilaments.length === 0;
 
   return (
     <div style={{ padding: 24, maxWidth: 800, margin: "0 auto" }}>
       <Title level={3}>
-        <FileTextOutlined /> Import Invoice
+        <FileTextOutlined /> Importar Factura
       </Title>
       
       <Paragraph type="secondary">
-        Paste your invoice text below to automatically extract filament prices and add new filaments to inventory.
+        Sube un PDF de factura de Bambu Lab o pega el texto para extraer filamentos y precios automáticamente.
       </Paragraph>
 
       <Card style={{ marginBottom: 24 }}>
-        <TextArea
-          rows={8}
-          placeholder="Paste invoice text here...&#10;&#10;Example:&#10;PLA Basic SKU: A00-K0-1.75-1000-SPL Variant: Black (10101) / 1kg ... €10.26"
-          value={invoiceText}
-          onChange={(e) => setInvoiceText(e.target.value)}
-          style={{ marginBottom: 16 }}
+        <Tabs
+          activeKey={uploadMethod}
+          onChange={(key) => setUploadMethod(key as "pdf" | "text")}
+          items={[
+            {
+              key: "pdf",
+              label: (
+                <span>
+                  <FilePdfOutlined /> Subir PDF
+                </span>
+              ),
+              children: (
+                <div>
+                  <Upload.Dragger
+                    accept=".pdf"
+                    maxCount={1}
+                    fileList={pdfFile ? [pdfFile] : []}
+                    beforeUpload={() => false}
+                    onChange={(info) => {
+                      const file = info.fileList[0] || null;
+                      setPdfFile(file);
+                      setError(null);
+                    }}
+                    onRemove={() => {
+                      setPdfFile(null);
+                    }}
+                    style={{ marginBottom: 16 }}
+                  >
+                    <p className="ant-upload-drag-icon">
+                      <FilePdfOutlined style={{ fontSize: 48, color: '#ff4d4f' }} />
+                    </p>
+                    <p className="ant-upload-text">
+                      Arrastra un PDF aquí o haz click para seleccionar
+                    </p>
+                    <p className="ant-upload-hint">
+                      Facturas de store.bambulab.com
+                    </p>
+                  </Upload.Dragger>
+                  
+                  <Space>
+                    <Button 
+                      type="primary" 
+                      onClick={parsePDF}
+                      loading={parsing}
+                      disabled={!pdfFile}
+                      icon={<UploadOutlined />}
+                    >
+                      Procesar PDF
+                    </Button>
+                    <Button onClick={() => {
+                      setPdfFile(null);
+                      setParsedFilaments([]);
+                      setError(null);
+                      setUpdated([]);
+                      setAdded([]);
+                    }}>
+                      Limpiar
+                    </Button>
+                  </Space>
+                </div>
+              ),
+            },
+            {
+              key: "text",
+              label: (
+                <span>
+                  <FileTextOutlined /> Pegar Texto
+                </span>
+              ),
+              children: (
+                <div>
+                  <TextArea
+                    rows={8}
+                    placeholder="Pega el texto de la factura aquí...&#10;&#10;Ejemplo:&#10;PLA Basic SKU: A00-K0-1.75-1000-SPL Variant: Black (10101) / 1kg ... €10.26"
+                    value={invoiceText}
+                    onChange={(e) => setInvoiceText(e.target.value)}
+                    style={{ marginBottom: 16 }}
+                  />
+                  
+                  <Space>
+                    <Button 
+                      type="primary" 
+                      onClick={parseInvoice}
+                      loading={parsing}
+                    >
+                      Procesar Texto
+                    </Button>
+                    <Button onClick={() => {
+                      setInvoiceText("");
+                      setParsedFilaments([]);
+                      setError(null);
+                      setUpdated([]);
+                      setAdded([]);
+                    }}>
+                      Limpiar
+                    </Button>
+                  </Space>
+                </div>
+              ),
+            },
+          ]}
         />
-        
-        <Space>
-          <Button 
-            type="primary" 
-            onClick={parseInvoice}
-            loading={parsing}
-          >
-            Parse Invoice
-          </Button>
-          <Button onClick={() => {
-            setInvoiceText("");
-            setParsedFilaments([]);
-            setError(null);
-            setUpdated([]);
-            setAdded([]);
-          }}>
-            Clear
-          </Button>
-        </Space>
       </Card>
 
       {error && (
@@ -316,77 +479,116 @@ export const InvoiceImport = () => {
         />
       )}
 
-      {/* Purchased but not in inventory */}
-      {unmatchedFilaments.length > 0 && (
+      {/* Success state - all filaments added */}
+      {allAdded && newlyAdded.length > 0 && (
         <Card 
-          title={
-            <Space>
-              <ShoppingCartOutlined style={{ color: '#faad14' }} />
-              <span>Purchased - Not in Inventory ({unmatchedFilaments.length})</span>
-            </Space>
-          }
-          style={{ marginBottom: 24, borderColor: '#faad14' }}
+          style={{ 
+            marginBottom: 24, 
+            borderColor: '#52c41a',
+            textAlign: 'center',
+            padding: '24px 0'
+          }}
         >
-          <Alert
-            message="These filaments are in your invoice but not yet in FilaFlow. Add them to start tracking!"
-            type="warning"
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
-          <List
-            dataSource={unmatchedFilaments}
-            renderItem={(item) => (
-              <List.Item
-                actions={[
-                  <Button 
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => openAddModal(item)}
-                  >
-                    Add to Inventory
-                  </Button>
-                ]}
-              >
-                <List.Item.Meta
-                  avatar={
-                    <div 
-                      style={{ 
-                        width: 40, 
-                        height: 40, 
-                        borderRadius: 8,
-                        backgroundColor: `#${getColorHex(item.color)}`,
-                        border: '1px solid #ddd'
-                      }} 
-                    />
-                  }
-                  title={
-                    <Space>
-                      <Text strong>{item.material}</Text>
-                      <Text>{item.color}</Text>
-                      <Tag color="green"><EuroOutlined /> {item.price.toFixed(2)}</Tag>
-                      <Tag>{item.weight}g</Tag>
-                    </Space>
-                  }
-                  description={<Text type="secondary" code>{item.article_number}</Text>}
-                />
-              </List.Item>
-            )}
-          />
+          <CheckCircleOutlined style={{ fontSize: 48, color: '#52c41a', marginBottom: 16 }} />
+          <Title level={4} style={{ margin: '0 0 8px 0' }}>
+            ✅ {newlyAdded.length} filamento(s) añadido(s)
+          </Title>
+          <Paragraph type="secondary" style={{ marginBottom: 16 }}>
+            Aparecerán como "pendientes de escanear" en el dashboard.
+            <br />
+            Cuando lleguen, escanéalos con BambuMan para verificarlos.
+          </Paragraph>
+          <Space>
+            <Button 
+              type="primary" 
+              size="large"
+              onClick={() => navigate('/')}
+            >
+              Ver Dashboard
+            </Button>
+            <Button 
+              onClick={() => {
+                setParsedFilaments([]);
+                setAdded([]);
+                setPdfFile(null);
+                setInvoiceText('');
+              }}
+            >
+              Importar otra factura
+            </Button>
+          </Space>
         </Card>
       )}
 
-      {/* Already in inventory - update prices */}
-      {matchedFilaments.length > 0 && (
+      {/* Purchased but not in inventory - Compact view */}
+      {unmatchedFilaments.length > 0 && (
         <Card 
-          title={
-            <Space>
-              <CheckCircleOutlined style={{ color: '#52c41a' }} />
-              <span>In Inventory ({matchedFilaments.length})</span>
-            </Space>
-          }
+          title={`📦 ${unmatchedFilaments.length} nuevo(s) - Pendiente llegada`}
           extra={
             <Button 
-              type="primary" 
+              type="primary"
+              size="small"
+              onClick={addAllFilaments}
+            >
+              Añadir todos
+            </Button>
+          }
+          style={{ marginBottom: 24, borderColor: '#faad14' }}
+          bodyStyle={{ padding: '8px 16px' }}
+        >
+          {unmatchedFilaments.map((item, idx) => (
+            <div 
+              key={item.sku}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                padding: '8px 0',
+                borderBottom: idx < unmatchedFilaments.length - 1 ? '1px solid #303030' : 'none',
+                gap: 8
+              }}
+            >
+              {/* Color indicator */}
+              <div 
+                style={{ 
+                  width: 24, 
+                  height: 24, 
+                  borderRadius: 4,
+                  backgroundColor: `#${getColorHex(item.color)}`,
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  flexShrink: 0
+                }} 
+              />
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                  <Text strong style={{ fontSize: 13 }}>{item.material}</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>{item.color}</Text>
+                </div>
+              </div>
+              {/* Price */}
+              <Text style={{ color: '#52c41a', fontWeight: 500, fontSize: 13 }}>
+                €{item.price.toFixed(2)}
+              </Text>
+              {/* Action */}
+              <Button 
+                type="primary"
+                size="small"
+                icon={<PlusOutlined />}
+                onClick={() => addFilamentDirect(item)}
+              />
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {/* Already in inventory - update prices - Compact view */}
+      {matchedFilaments.length > 0 && (
+        <Card 
+          title={`✓ ${matchedFilaments.length} en inventario`}
+          extra={
+            <Button 
+              type="primary"
+              size="small"
               onClick={() => {
                 matchedFilaments.forEach(f => {
                   if (!updated.includes(f.article_number)) {
@@ -395,200 +597,92 @@ export const InvoiceImport = () => {
                 });
               }}
             >
-              Update All Prices
+              Actualizar todos
             </Button>
           }
           style={{ marginBottom: 24 }}
+          bodyStyle={{ padding: '8px 16px' }}
         >
-          <List
-            dataSource={matchedFilaments}
-            renderItem={(item) => {
-              const matching = findMatchingFilament(item.article_number);
-              const isUpdated = updated.includes(item.article_number);
-              
-              return (
-                <List.Item
-                  actions={[
-                    isUpdated ? (
-                      <Tag color="green">
-                        <CheckCircleOutlined /> Updated
-                      </Tag>
-                    ) : (
-                      <Button 
-                        size="small" 
-                        type="primary"
-                        onClick={() => applyPrice(item)}
-                      >
-                        Update Price
-                      </Button>
-                    )
-                  ]}
-                >
-                  <List.Item.Meta
-                    avatar={
-                      <div 
-                        style={{ 
-                          width: 40, 
-                          height: 40, 
-                          borderRadius: 8,
-                          backgroundColor: `#${getColorHex(item.color)}`,
-                          border: '1px solid #ddd'
-                        }} 
-                      />
-                    }
-                    title={
-                      <Space>
-                        <Text strong>{item.material}</Text>
-                        <Text>{item.color}</Text>
-                        <Tag color="green"><EuroOutlined /> {item.price.toFixed(2)}</Tag>
-                      </Space>
-                    }
-                    description={
-                      <Space direction="vertical" size={0}>
-                        <Text type="secondary" code>{item.article_number}</Text>
-                        {matching && (
-                          <Text type="success">
-                            <CheckCircleOutlined /> {matching.name}
-                            {matching.price && ` (current: €${matching.price})`}
-                          </Text>
-                        )}
-                      </Space>
-                    }
-                  />
-                </List.Item>
-              );
-            }}
-          />
+          {matchedFilaments.map((item, idx) => {
+            const isUpdated = updated.includes(item.article_number);
+            return (
+              <div 
+                key={item.sku}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  padding: '8px 0',
+                  borderBottom: idx < matchedFilaments.length - 1 ? '1px solid #303030' : 'none',
+                  gap: 8
+                }}
+              >
+                <div 
+                  style={{ 
+                    width: 24, 
+                    height: 24, 
+                    borderRadius: 4,
+                    backgroundColor: `#${getColorHex(item.color)}`,
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    flexShrink: 0
+                  }} 
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <Text strong style={{ fontSize: 13 }}>{item.material}</Text>
+                  <Text type="secondary" style={{ fontSize: 12, marginLeft: 4 }}>{item.color}</Text>
+                </div>
+                <Text style={{ color: '#52c41a', fontSize: 13 }}>€{item.price.toFixed(2)}</Text>
+                {isUpdated ? (
+                  <Tag color="green" style={{ margin: 0 }}>✓</Tag>
+                ) : (
+                  <Button size="small" onClick={() => applyPrice(item)}>
+                    Actualizar
+                  </Button>
+                )}
+              </div>
+            );
+          })}
         </Card>
       )}
 
-      {/* Newly added */}
+      {/* Newly added - Compact view */}
       {newlyAdded.length > 0 && (
         <Card 
-          title={
-            <Space>
-              <PlusOutlined style={{ color: '#1890ff' }} />
-              <span>Just Added ({newlyAdded.length})</span>
-            </Space>
-          }
+          title={`✨ ${newlyAdded.length} añadido(s)`}
           style={{ marginBottom: 24, borderColor: '#1890ff' }}
+          bodyStyle={{ padding: '8px 16px' }}
         >
-          <List
-            dataSource={newlyAdded}
-            renderItem={(item) => (
-              <List.Item>
-                <List.Item.Meta
-                  avatar={
-                    <div 
-                      style={{ 
-                        width: 40, 
-                        height: 40, 
-                        borderRadius: 8,
-                        backgroundColor: `#${getColorHex(item.color)}`,
-                        border: '1px solid #ddd'
-                      }} 
-                    />
-                  }
-                  title={
-                    <Space>
-                      <Text strong>{item.material}</Text>
-                      <Text>{item.color}</Text>
-                      <Tag color="blue"><PlusOutlined /> Added</Tag>
-                    </Space>
-                  }
-                  description={<Text type="secondary" code>{item.article_number}</Text>}
-                />
-              </List.Item>
-            )}
-          />
+          {newlyAdded.map((item, idx) => (
+            <div 
+              key={item.sku}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                padding: '8px 0',
+                borderBottom: idx < newlyAdded.length - 1 ? '1px solid #303030' : 'none',
+                gap: 8
+              }}
+            >
+              <div 
+                style={{ 
+                  width: 24, 
+                  height: 24, 
+                  borderRadius: 4,
+                  backgroundColor: `#${getColorHex(item.color)}`,
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  flexShrink: 0
+                }} 
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Text strong style={{ fontSize: 13 }}>{item.material}</Text>
+                <Text type="secondary" style={{ fontSize: 12, marginLeft: 4 }}>{item.color}</Text>
+              </div>
+              <Tag color="blue" style={{ margin: 0 }}>✓ Añadido</Tag>
+            </div>
+          ))}
         </Card>
       )}
 
-      <Divider />
-      
-      <Card size="small" style={{ backgroundColor: '#fafafa' }}>
-        <Title level={5}>Supported Invoice Formats</Title>
-        <Paragraph type="secondary">
-          <strong>Bambu Lab</strong> (store.bambulab.com)
-          <br />
-          Copy the invoice email or PDF text and paste it above.
-        </Paragraph>
-      </Card>
-
-      {/* Add Filament Modal */}
-      <Modal
-        title="Add Filament to Inventory"
-        open={addModalVisible}
-        onOk={handleAddFilament}
-        onCancel={() => setAddModalVisible(false)}
-        okText="Add Filament"
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item name="name" label="Name" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          
-          <Form.Item name="material" label="Material" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="PLA">PLA</Select.Option>
-              <Select.Option value="PETG">PETG</Select.Option>
-              <Select.Option value="ABS">ABS</Select.Option>
-              <Select.Option value="ASA">ASA</Select.Option>
-              <Select.Option value="TPU">TPU</Select.Option>
-              <Select.Option value="PA">PA (Nylon)</Select.Option>
-              <Select.Option value="PC">PC</Select.Option>
-              <Select.Option value="PVA">PVA</Select.Option>
-            </Select>
-          </Form.Item>
-          
-          <Form.Item name="vendor_id" label="Vendor">
-            <Select>
-              {vendors.map(v => (
-                <Select.Option key={v.id} value={v.id}>{v.name}</Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          
-          <Space style={{ width: '100%' }}>
-            <Form.Item name="price" label="Price (€/kg)" rules={[{ required: true }]}>
-              <InputNumber min={0} step={0.01} style={{ width: 120 }} />
-            </Form.Item>
-            
-            <Form.Item name="weight" label="Weight (g)" rules={[{ required: true }]}>
-              <InputNumber min={0} style={{ width: 120 }} />
-            </Form.Item>
-          </Space>
-          
-          <Form.Item name="color_hex" label="Color (hex)" rules={[{ required: true }]}>
-            <Input prefix="#" maxLength={6} />
-          </Form.Item>
-          
-          <Form.Item name="article_number" label="Article Number">
-            <Input disabled />
-          </Form.Item>
-          
-          <Form.Item name="density" hidden>
-            <InputNumber />
-          </Form.Item>
-          
-          <Form.Item name="diameter" hidden>
-            <InputNumber />
-          </Form.Item>
-          
-          <Divider />
-          
-          <Form.Item name="create_spool" valuePropName="checked" initialValue={true}>
-            <Select defaultValue={true}>
-              <Select.Option value={true}>Also create a spool (recommended)</Select.Option>
-              <Select.Option value={false}>Only create filament type</Select.Option>
-            </Select>
-          </Form.Item>
-          
-          <Form.Item name="spool_location" label="Spool Location (optional)">
-            <Input placeholder="e.g., Shelf A1, Storage Box" />
-          </Form.Item>
-        </Form>
-      </Modal>
+      {/* Note: Filaments are added directly, no modal needed */}
     </div>
   );
 };
