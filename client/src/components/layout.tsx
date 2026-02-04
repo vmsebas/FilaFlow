@@ -52,7 +52,7 @@ export const SpoolmanLayout = ({ children }: { children: React.ReactNode }) => (
     Sider={() => (
       <ThemedSider
         fixed
-        Title={({ collapsed }) => <ThemedTitle collapsed={collapsed} text="Spoolman" icon={<Logo />} />}
+        Title={({ collapsed }) => <ThemedTitle collapsed={collapsed} text="Spoolman DEV 🧪" icon={<Logo />} />}
       />
     )}
     Footer={() => <SpoolmanFooter />}

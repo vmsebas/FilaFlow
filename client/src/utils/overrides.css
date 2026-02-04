@@ -1,3 +1,144 @@
 #qty-input {
   text-align: center !important;
 }
+
+/* ============================================
+   MOBILE OPTIMIZATIONS - iPhone Pro Max
+   ============================================ */
+
+/* Larger touch targets for buttons */
+@media (max-width: 768px) {
+  /* Bigger buttons on mobile */
+  .ant-btn {
+    min-height: 44px !important;
+    padding: 8px 16px !important;
+    font-size: 16px !important;
+  }
+
+  /* Larger table rows for easier tapping */
+  .ant-table-tbody > tr > td {
+    padding: 16px 12px !important;
+  }
+
+  /* Bigger form inputs */
+  .ant-input,
+  .ant-select-selector,
+  .ant-picker {
+    min-height: 44px !important;
+    font-size: 16px !important;
+  }
+
+  /* Larger menu items in sidebar */
+  .ant-menu-item {
+    min-height: 50px !important;
+    line-height: 50px !important;
+    font-size: 16px !important;
+  }
+
+  /* Card spacing */
+  .ant-card {
+    margin-bottom: 16px !important;
+  }
+
+  .ant-card-body {
+    padding: 16px !important;
+  }
+
+  /* Better modal on mobile - full width */
+  .ant-modal {
+    max-width: 95vw !important;
+    margin: 10px auto !important;
+  }
+
+  .ant-modal-content {
+    padding: 16px !important;
+  }
+
+  /* Larger page titles */
+  .ant-page-header-heading-title {
+    font-size: 20px !important;
+  }
+
+  /* Better spacing for list items */
+  .ant-list-item {
+    padding: 16px !important;
+  }
+
+  /* Floating action button style for primary actions */
+  .mobile-fab {
+    position: fixed !important;
+    bottom: 24px !important;
+    right: 24px !important;
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 50% !important;
+    font-size: 24px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+    z-index: 1000 !important;
+  }
+
+  /* Hide less important columns on mobile */
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  /* Better tag display */
+  .ant-tag {
+    font-size: 14px !important;
+    padding: 4px 8px !important;
+    margin: 4px !important;
+  }
+
+  /* Improve number inputs */
+  .ant-input-number {
+    width: 100% !important;
+  }
+
+  /* Better pagination */
+  .ant-pagination {
+    text-align: center !important;
+  }
+
+  .ant-pagination-item {
+    min-width: 40px !important;
+    height: 40px !important;
+    line-height: 40px !important;
+  }
+}
+
+/* Extra small screens (iPhone SE, etc) */
+@media (max-width: 375px) {
+  .ant-btn {
+    padding: 6px 12px !important;
+    font-size: 14px !important;
+  }
+
+  .ant-card-body {
+    padding: 12px !important;
+  }
+}
+
+/* Improve spool color display */
+.spool-color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 2px solid #ccc;
+}
+
+/* Quick stats cards */
+.stat-card {
+  text-align: center;
+  padding: 16px;
+}
+
+.stat-card .stat-value {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.stat-card .stat-label {
+  font-size: 14px;
+  color: #666;
+}
