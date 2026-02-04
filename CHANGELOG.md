@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Nothing yet
+- 🔍 **Search bar** - Find spools by name, material, vendor, or location
+- 🏷️ **Filter chips** - Quick filter by material type or location
+- 📍 **Location display** - Show spool location on cards
+- 💰 **Cost display** - Show estimated value per spool and total inventory value
+- 💶 **Value stat card** - Total inventory value in euros (replaces Vendors card)
 
 ---
 
