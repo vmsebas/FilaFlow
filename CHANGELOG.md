@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 📄 **Invoice Import page** - Parse Bambu Lab invoices to auto-fill filament prices
+- 🔌 **Invoice API** - `/api/v1/invoice/parse` endpoint for programmatic invoice parsing
 - 🚨 **Stock alerts script** - Daily alerts for low stock (<20%) and old spools (>6 months)
 - 📊 **Monthly report script** - Comprehensive inventory report on 1st of each month
 - 📅 **Weekly summary script** - Light weekly inventory overview every Monday

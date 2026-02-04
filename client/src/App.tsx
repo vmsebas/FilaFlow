@@ -7,6 +7,7 @@ import "@refinedev/antd/dist/reset.css";
 
 import {
   FileOutlined,
+  FileTextOutlined,
   HighlightOutlined,
   HomeOutlined,
   QuestionOutlined,
@@ -166,6 +167,15 @@ function App() {
                     icon: <QuestionOutlined />,
                   },
                 },
+                {
+                  name: "invoice",
+                  list: "/invoice",
+                  meta: {
+                    canDelete: false,
+                    icon: <FileTextOutlined />,
+                    label: "Import Invoice",
+                  },
+                },
               ]}
               options={{
                 syncWithLocation: true,
@@ -225,6 +235,7 @@ function App() {
                   <Route path="/settings/*" element={<LoadablePage name="settings" />} />
                   <Route path="/help" element={<LoadablePage name="help" />} />
                   <Route path="/locations" element={<LoadablePage name="locations" />} />
+                  <Route path="/invoice" element={<LoadablePage name="invoice" />} />
                   <Route path="*" element={<ErrorComponent />} />
                 </Route>
               </Routes>
